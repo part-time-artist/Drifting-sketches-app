@@ -1,7 +1,7 @@
 /* Global Reset & Base */
 :root {
   --bg-color: #FFFEFC;
-  --font-family: 'Bitcount Grid Single', system-ui, sans-serif;
+  --font-family: 'Bitcount Grid Single', 'VT323', system-ui, sans-serif;
   --text-muted: #9AABA0;
   --text-dark: #52606D;
   --text-very-dark: #4A5568;
@@ -256,12 +256,14 @@ body, html {
 @media (max-width: 768px) {
   .floating-controls {
     flex-direction: column;
-    padding: 20px 16px;
-    gap: 16px;
-    bottom: 20px;
+    padding: 12px 16px;
+    gap: 12px;
+    bottom: 16px;
     width: 85%;
     max-width: 320px;
-    border-radius: 32px;
+    border-radius: 28px;
+    transform: translateX(-50%) scale(0.85);
+    transform-origin: bottom center;
   }
   .brushes-container {
     flex-wrap: wrap;
@@ -279,9 +281,9 @@ body, html {
     justify-content: center;
   }
   .wind-indicator {
-    top: 20px;
-    right: 20px;
-    transform: scale(0.85);
+    top: 16px;
+    right: 16px;
+    transform: scale(0.8);
     transform-origin: top right;
   }
 }

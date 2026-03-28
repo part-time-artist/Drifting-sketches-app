@@ -78,8 +78,7 @@ function draw() {
 
 // Map the mouse inputs identically
 function mousePressed(e) {
-  let bottomZone = windowWidth < 768 ? 260 : 100;
-  if (mouseY > height - bottomZone || mouseY < 80) return; 
+  if (e && e.target && e.target.tagName !== 'CANVAS') return; 
   isDrawing = true;
   currentPoints = [[mouseX, mouseY]]; 
 }
@@ -148,25 +147,26 @@ function mouseReleased() {
 
 // ==== MOBILE TOUCH SUPPORT ==== //
 function touchStarted(e) {
-  let bottomZone = windowWidth < 768 ? 260 : 100;
-  if (mouseY > height - bottomZone || mouseY < 80) return true; 
+  if (e && e.target && e.target.tagName !== 'CANVAS') return; 
   isDrawing = true;
   currentPoints = [[mouseX, mouseY]];
-  return false; // Prevent double-click zoom or scrolling
+  return false; 
 }
 
-function touchMoved() {
+function touchMoved(e) {
+  if (e && e.target && e.target.tagName !== 'CANVAS') return; 
   if (isDrawing) {
     let last = currentPoints[currentPoints.length - 1];
     let pt = [mouseX, mouseY];
     if (dist(last[0], last[1], pt[0], pt[1]) > 5) {
       currentPoints.push(pt);
     }
-    return false; // Prevent pull-to-refresh
+    return false; 
   }
 }
 
-function touchEnded() {
+function touchEnded(e) {
+  if (e && e.target && e.target.tagName !== 'CANVAS') return;
   mouseReleased();
   return false;
 }
@@ -347,11 +347,12 @@ function updateWindUI(speed, dirDegree) {
   const val = Math.floor((dirDegree / 22.5) + 0.5);
   const compassDir = directions[(val % 16)];
   unitEl.textContent = `km/h ${compassDir}`;
-  if (speed > 5) {
-    iconCont.classList.add('animating');
-    iconCont.style.animationDuration = `${map(speed, 5, 50, 4, 0.5)}s`;
-  } else {
-    iconCont.classList.remove('animating');
+  
+  const balloon = document.getElementById('balloon-svg');
+  if (balloon) {
+    balloon.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    // Add 180 so the balloon leans away from the wind source!
+    balloon.style.transform = `rotate(${dirDegree + 180}deg)`;
   }
 }
 
