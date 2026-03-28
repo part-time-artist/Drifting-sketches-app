@@ -16,6 +16,7 @@ body, html {
   overflow: hidden;
   font-family: var(--font-family);
   user-select: none;
+  touch-action: none;
 }
 
 /* Canvas container overlay logic */
@@ -250,4 +251,37 @@ body, html {
   border-radius: 100px;
   width: calc(var(--val, 20) * 1%);
   pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .floating-controls {
+    flex-direction: column;
+    padding: 20px 16px;
+    gap: 16px;
+    bottom: 20px;
+    width: 85%;
+    max-width: 320px;
+    border-radius: 32px;
+  }
+  .brushes-container {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .divider {
+    height: 1px;
+    width: 100%;
+  }
+  .color-picker {
+    width: 100% !important;
+  }
+  .weight-control {
+    width: 100%;
+    justify-content: center;
+  }
+  .wind-indicator {
+    top: 20px;
+    right: 20px;
+    transform: scale(0.85);
+    transform-origin: top right;
+  }
 }

@@ -77,8 +77,9 @@ function draw() {
 }
 
 // Map the mouse inputs identically
-function mousePressed() {
-  if (mouseY > height - 100 || mouseY < 80) return; // avoid UI drawing
+function mousePressed(e) {
+  let bottomZone = windowWidth < 768 ? 260 : 100;
+  if (mouseY > height - bottomZone || mouseY < 80) return; 
   isDrawing = true;
   currentPoints = [[mouseX, mouseY]]; 
 }
@@ -143,6 +144,31 @@ function mouseReleased() {
   }
   isDrawing = false;
   currentPoints = [];
+}
+
+// ==== MOBILE TOUCH SUPPORT ==== //
+function touchStarted(e) {
+  let bottomZone = windowWidth < 768 ? 260 : 100;
+  if (mouseY > height - bottomZone || mouseY < 80) return true; 
+  isDrawing = true;
+  currentPoints = [[mouseX, mouseY]];
+  return false; // Prevent double-click zoom or scrolling
+}
+
+function touchMoved() {
+  if (isDrawing) {
+    let last = currentPoints[currentPoints.length - 1];
+    let pt = [mouseX, mouseY];
+    if (dist(last[0], last[1], pt[0], pt[1]) > 5) {
+      currentPoints.push(pt);
+    }
+    return false; // Prevent pull-to-refresh
+  }
+}
+
+function touchEnded() {
+  mouseReleased();
+  return false;
 }
 
 // ====== CUSTOM ORGANIC BRUSH ENGINES ====== //
@@ -231,34 +257,36 @@ function drawToBuffer(pg, pts, type, colStr, weightVal) {
     }
   } 
   else if (type === 'pencil') {
-    // Authentic heavy granular graphite texture
-    col.setAlpha(180);
+    // Extreme granular graphite texture: violent noise particle spray
+    col.setAlpha(200);
     pg.stroke(col);
     pg.strokeCap(SQUARE);
     for (let i = 0; i < pts.length - 1; i++) {
       let p1 = pts[i];
       let p2 = pts[i+1];
       let d = dist(p1[0], p1[1], p2[0], p2[1]);
-      let steps = Math.floor(d * 1.5) + 1; // Extremely dense sampling
+      let steps = Math.floor(d * 3.0) + 1; // Insanely dense particle mapping
       
       for (let s = 0; s < steps; s++) {
-        // Leave tiny random gaps for paper texture
-        if (random() > 0.25) {
+        if (random() > 0.1) { // 90% particle trigger to emulate dark graphite
           let t = s / steps;
           let nx = lerp(p1[0], p2[0], t);
           let ny = lerp(p1[1], p2[1], t);
           
-          // Heavy erratic scatter mapped to thickness
-          let scatter = baseThickness * 0.15;
-          let rx = random(-scatter, scatter) * 2;
-          let ry = random(-scatter, scatter) * 2;
+          let scatter = baseThickness * 0.4; // Very wide chaotic scatter
+          let drops = floor(random(1, 5)); // Multiple noise points per step = "grit"
           
-          pg.strokeWeight(random(0.5, baseThickness * 0.4));
-          pg.point(nx + rx, ny + ry); // Massive graphite grain plotting
+          for (let p = 0; p < drops; p++) {
+            let rx = random(-scatter, scatter);
+            let ry = random(-scatter, scatter);
+            pg.strokeWeight(random(0.5, 2)); // Tiny varied dot sizes
+            pg.point(nx + rx, ny + ry); 
+          }
           
-          // Occasional sharp graphite scratch
-          if (random() > 0.85) {
-            pg.line(nx + rx, ny + ry, nx + rx + random(-3,3), ny + ry + random(-3,3));
+          // Ultra-sharp long graphite scratch chunks mixed into the dust
+          if (random() > 0.95) {
+            pg.strokeWeight(0.5);
+            pg.line(nx, ny, nx + random(-6, 6), ny + random(-6, 6));
           }
         }
       }
@@ -389,15 +417,8 @@ function setupUI() {
       }
       exportPg.pop();
 
-      // Force native browser download instead of relying softly on p5 save()
-      let dataURI = exportPg.canvas.toDataURL("image/png");
-      let a = document.createElement('a');
-      a.href = dataURI;
-      a.download = 'drifting_artwork.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
+      // Execute a guaranteed mobile-friendly/desktop save using p5's native Canvas hook directly on the element!
+      saveCanvas(exportPg.canvas, 'drifting_artwork', 'png');
       exportPg.remove();
     });
   }
