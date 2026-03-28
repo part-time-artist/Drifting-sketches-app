@@ -369,7 +369,10 @@ function setupUI() {
   const colorBtns = document.querySelectorAll('.color-btn');
   colorBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
-      colorBtns.forEach(b => b.classList.remove('active'));
+      colorBtns.forEach(b => {
+        b.classList.remove('active');
+        b.style.boxShadow = '';
+      });
       e.target.classList.add('active');
       selectedColorStr = e.target.dataset.color;
       e.target.style.boxShadow = `0 0 0 2px #FFF, 0 0 0 4px ${selectedColorStr}`;
