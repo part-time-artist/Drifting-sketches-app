@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Drifting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- p5.js and p5.brush -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.0/p5.min.js"></script>
+
+  
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</head>
+<body>
+  
+  <!-- The p5 canvas will be injected here -->
+  <div id="canvas-container"></div>
+
+  <!-- UI Overlay -->
+  <div id="ui-layer" class="ui-shell">
+    
+    <!-- Top Right: Wind Vector -->
+    <div class="wind-indicator">
+      <div class="wind-text-block">
+        <div class="wind-label">Live Wind</div>
+        <div class="wind-values">
+          <div id="wind-speed" class="wind-speed">--</div>
+          <div id="wind-unit" class="wind-unit">km/h</div>
+        </div>
+      </div>
+      <div id="wind-icon-container" class="wind-icon-container">
+        <!-- SVG Icon -->
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="wind-svg" stroke="#6C8074" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22v-8" />
+          <path d="M12 14C8 14 5 10 5 6" />
+          <path d="M12 14c4 0 7-4 7-8" />
+          <path d="M12 14V6" />
+          <circle cx="12" cy="22" r="1.5" fill="#6C8074" />
+          <path d="M8 8l2 2" />
+          <path d="M16 8l-2 2" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Bottom Center: Floating Controls -->
+    <div class="floating-controls">
+      <!-- Brush tools -->
+      <div class="brushes-container">
+        <button class="brush-btn active" data-brush="watercolor">Watercolour</button>
+        <button class="brush-btn" data-brush="HB">Pencil</button>
+        <button class="brush-btn" data-brush="pen">Ink</button>
+        <button class="brush-btn" data-brush="marker">Marker</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Color Palette -->
+      <div class="color-picker" style="display: flex; gap: 8px; flex-wrap: wrap; width: 152px; justify-content: center;">
+        <button class="color-btn active" data-color="#4A5568" style="background-color: #4A5568;" title="Charcoal"></button>
+        <button class="color-btn" data-color="#739E5A" style="background-color: #739E5A;" title="Sage"></button>
+        <button class="color-btn" data-color="#A27244" style="background-color: #A27244;" title="Peach"></button>
+        <button class="color-btn" data-color="#A4B5C8" style="background-color: #A4B5C8;" title="Dust"></button>
+        <button class="color-btn" data-color="#EBE4F0" style="background-color: #EBE4F0; border: 1px solid rgba(0,0,0,0.1);" title="Lilac"></button>
+        <button class="color-btn" data-color="#E63946" style="background-color: #E63946;" title="Crimson"></button>
+        <button class="color-btn" data-color="#F4A261" style="background-color: #F4A261;" title="Sunset"></button>
+        <button class="color-btn" data-color="#E9C46A" style="background-color: #E9C46A;" title="Gold"></button>
+        <button class="color-btn" data-color="#2A9D8F" style="background-color: #2A9D8F;" title="Teal"></button>
+        <button class="color-btn" data-color="#264653" style="background-color: #264653;" title="Navy"></button>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Export Button -->
+      <button id="export-btn" class="export-btn" title="Export Artwork">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </button>
+
+      <!-- Weight Slider -->
+      <div class="weight-control">
+        <div class="weight-label">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#739E5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
+            <line x1="16" y1="8" x2="2" y2="22" />
+            <line x1="17.5" y1="15" x2="9" y2="15" />
+          </svg>
+          <span>Feather</span>
+        </div>
+        
+        <div class="slider-wrapper">
+          <input type="range" id="weight-slider" class="custom-slider" min="0" max="1" step="0.01" value="0.2">
+        </div>
+        
+        <div class="weight-label">
+          <span>Stone</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A27244" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3l4 8 5-5 5 15H2L8 3z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

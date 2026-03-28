@@ -1,0 +1,7 @@
+{
+    "mcpServers": {
+        "paper": {
+            "serverUrl": "http://127.0.0.1:29979/mcp"
+        }
+    }
+}
