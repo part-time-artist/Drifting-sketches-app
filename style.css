@@ -38,6 +38,85 @@ body, html {
   height: 100%;
   pointer-events: none; /* Let clicks pass through background to canvas */
   z-index: 10;
+  transition: filter 1s ease; /* To gracefully unblur when modal drops */
+}
+
+/* --- Splash Boot Modal --- */
+.boot-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 999;
+  background-color: rgba(255, 254, 252, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center; justify-content: center;
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+
+.boot-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 90%;
+  max-width: 440px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  padding: 40px;
+  border-radius: 32px;
+  box-shadow: 0px 24px 64px rgba(74, 85, 104, 0.15);
+}
+
+.terminal-text {
+  font-family: 'VT323', 'Courier New', monospace;
+  font-size: 22px;
+  color: var(--text-dark);
+  line-height: 1.5;
+  min-height: 130px; 
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-line {
+  opacity: 0;
+  animation: typeFadeIn 0.3s forwards;
+}
+
+@keyframes typeFadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.boot-poetic {
+  color: var(--text-dark);
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: center;
+  transition: opacity 1s ease;
+}
+
+.enter-btn {
+  background-color: var(--text-very-dark);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 1s ease;
+  align-self: center;
+  margin-top: 8px;
+  font-family: var(--font-family);
+}
+.enter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(74, 85, 104, 0.3);
+}
+
+.hidden {
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 /* Make actual UI elements clickable */

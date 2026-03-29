@@ -308,32 +308,84 @@ function windowResized() {
 
 // Weather Engine
 function fetchWeatherData() {
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
-        const data = await res.json();
-        windSpeed = data.current_weather.windspeed;
-        let windDirDegrees = data.current_weather.winddirection;
-        globalWindAngle = windDirDegrees * (Math.PI / 180);
-        windVector.x = Math.sin(globalWindAngle) * windSpeed;
-        windVector.y = -Math.cos(globalWindAngle) * windSpeed;
-        updateWindUI(windSpeed, windDirDegrees);
-      } catch (err) {
-        console.error("Weather fetch failed", err);
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        try {
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+          const data = await res.json();
+          if (data.current_weather) {
+            windSpeed = data.current_weather.windspeed;
+            let windDirDegrees = data.current_weather.winddirection;
+            globalWindAngle = windDirDegrees * (Math.PI / 180);
+            windVector.x = Math.sin(globalWindAngle) * windSpeed;
+            windVector.y = -Math.cos(globalWindAngle) * windSpeed;
+            updateWindUI(windSpeed, windDirDegrees);
+            
+            const compassDir = document.querySelector('.wind-unit').textContent.split(' ')[1] || '';
+            startBootSequence(`${windSpeed.toFixed(1)} km/h (${compassDir})`);
+          } else {
+            startBootSequence(`${windSpeed.toFixed(1)} km/h (No Data)`);
+          }
+        } catch (err) {
+          console.error(err);
+          startBootSequence(`${windSpeed.toFixed(1)} km/h (Offline)`);
+        }
+      },
+      (error) => {
+        console.warn('Geolocation denied or failed, using default wind.');
+        startBootSequence(`15.5 km/h (Fallback Location)`);
       }
-    }, (err) => {
-      windSpeed = 15.5;
-      globalWindAngle = 45 * Math.PI / 180;
-      updateWindUI(windSpeed, 45);
-      windVector.x = Math.sin(globalWindAngle) * windSpeed;
-      windVector.y = -Math.cos(globalWindAngle) * windSpeed;
-    });
+    );
   } else {
-    windSpeed = 15.5;
-    updateWindUI(windSpeed, 45);
+    startBootSequence(`15.5 km/h (Fallback Location)`);
+  }
+}
+
+// ==== BOOT SEQUENCE ENGINE ==== //
+function startBootSequence(windStr) {
+  const termEl = document.getElementById('terminal-text');
+  const poetic = document.getElementById('boot-poetic');
+  const enterBtn = document.getElementById('enter-btn');
+  const overlay = document.getElementById('boot-overlay');
+  
+  if (!termEl || termEl.hasAttribute('data-booting')) return;
+  termEl.setAttribute('data-booting', 'true');
+
+  const lines = [
+    `> Requesting user coordinates...`,
+    `> Connecting to meteorological array...`,
+    `> Live wind detected: ${windStr}`,
+    `> Synchronizing canvas physics...`,
+    `> Boot sequence complete.`
+  ];
+
+  termEl.innerHTML = '';
+  
+  lines.forEach((line, index) => {
+    setTimeout(() => {
+      let div = document.createElement('div');
+      div.className = 'terminal-line';
+      div.innerText = line;
+      termEl.appendChild(div);
+      
+      if (index === lines.length - 1) {
+        setTimeout(() => {
+           if(poetic) poetic.classList.remove('hidden');
+           if(enterBtn) enterBtn.classList.remove('hidden');
+        }, 800);
+      }
+    }, index * 800);
+  });
+
+  if (enterBtn) {
+    enterBtn.onclick = () => {
+      overlay.style.opacity = '0';
+      overlay.style.pointerEvents = 'none';
+      setTimeout(() => overlay.remove(), 800);
+    };
   }
 }
 
