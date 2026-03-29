@@ -308,9 +308,24 @@ function windowResized() {
 
 // Weather Engine
 function fetchWeatherData() {
+  // Set a timeout to trigger fallback if geolocation takes too long
+  let fallbackTriggered = false;
+  const timeoutId = setTimeout(() => {
+    if (!fallbackTriggered) {
+      fallbackTriggered = true;
+      console.warn('Geolocation timeout, using fallback.');
+      updateWindUI(12.4, 210); // Default placeholder wind
+      startBootSequence(`12.4 km/h (Estimate)`);
+    }
+  }, 6000);
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        if (fallbackTriggered) return;
+        clearTimeout(timeoutId);
+        fallbackTriggered = true;
+
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
         try {
@@ -327,19 +342,28 @@ function fetchWeatherData() {
             const compassDir = document.querySelector('.wind-unit').textContent.split(' ')[1] || '';
             startBootSequence(`${windSpeed.toFixed(1)} km/h (${compassDir})`);
           } else {
-            startBootSequence(`${windSpeed.toFixed(1)} km/h (No Data)`);
+            updateWindUI(15.5, 45);
+            startBootSequence(`15.5 km/h (No Data)`);
           }
         } catch (err) {
           console.error(err);
-          startBootSequence(`${windSpeed.toFixed(1)} km/h (Offline)`);
+          updateWindUI(15.5, 45);
+          startBootSequence(`15.5 km/h (Offline)`);
         }
       },
       (error) => {
+        if (fallbackTriggered) return;
+        clearTimeout(timeoutId);
+        fallbackTriggered = true;
         console.warn('Geolocation denied or failed, using default wind.');
+        updateWindUI(15.5, 45);
         startBootSequence(`15.5 km/h (Fallback Location)`);
-      }
+      },
+      { timeout: 5000, enableHighAccuracy: false } // Geolocation specific options
     );
   } else {
+    clearTimeout(timeoutId);
+    updateWindUI(15.5, 45);
     startBootSequence(`15.5 km/h (Fallback Location)`);
   }
 }
@@ -434,47 +458,75 @@ function setupUI() {
   const exportBtn = document.getElementById('export-btn');
   if(exportBtn) {
     exportBtn.addEventListener('click', () => {
+      // Force a high-quality export by using a high pixel density buffer
+      const exportDensity = 2; // Fixed high density for crisp export
       let exportPg = createGraphics(width, height);
+      exportPg.pixelDensity(exportDensity);
+      
       exportPg.background('#FFFEFC'); 
       exportPg.imageMode(CENTER);
       
+      // Draw all strokes
       for (let s of strokes) {
         exportPg.push();
         exportPg.translate(s.cx, s.cy);
         exportPg.rotate(s.rotation);
+        // Draw the first frame for export
         exportPg.image(s.pgs[0], 0, 0); 
         exportPg.pop();
+        
+        // Handle wrapping for export - if a stroke is partially off screen, 
+        // it should appear on the other side in the final image too!
+        // We check 8 possible wrap positions (3x3 grid minus center)
+        const wrapX = [0, -width, width];
+        const wrapY = [0, -height, height];
+        
+        for(let ox of wrapX) {
+          for(let oy of wrapY) {
+            if(ox === 0 && oy === 0) continue;
+            exportPg.push();
+            exportPg.translate(s.cx + ox, s.cy + oy);
+            exportPg.rotate(s.rotation);
+            exportPg.image(s.pgs[0], 0, 0);
+            exportPg.pop();
+          }
+        }
       }
 
       // Generate Artwork Statistics Footer
       exportPg.push();
       exportPg.noStroke();
-      exportPg.fill(255, 255, 255, 200);
-      exportPg.rect(0, height - 80, width, 80);
+      // Use a slightly more elegant semi-transparent footer
+      exportPg.fill(255, 255, 255, 220);
+      exportPg.rect(0, height - 90, width, 90);
       
       exportPg.fill('#4A5568');
       exportPg.textFont('monospace');
       exportPg.textAlign(LEFT, CENTER);
-      exportPg.textSize(14);
+      exportPg.textSize(12);
       
       let uniqueBrushes = [...new Set(strokes.map(s => s.brushType))].join(', ');
       let uniqueColorsList = [...new Set(strokes.map(s => s.color))];
       let avgWt = strokes.length > 0 ? (strokes.reduce((sum, s) => sum + s.weight, 0) / strokes.length).toFixed(2) : '0';
       
-      let statText = `DRIFTING | Wind: ${windSpeed.toFixed(1)} km/h | Brushes: ${uniqueBrushes || 'None'} | Avg Weight: ${avgWt}`;
-      exportPg.text(statText, 30, height - 50);
+      let dateStr = new Date().toLocaleDateString();
+      let statLine1 = `DRIFTING | ${dateStr} | Wind: ${windSpeed.toFixed(1)} km/h`;
+      let statLine2 = `Brushes: ${uniqueBrushes || 'None'} | Avg Weight: ${avgWt}`;
+      
+      exportPg.text(statLine1, 30, height - 65);
+      exportPg.text(statLine2, 30, height - 45);
       
       exportPg.text('Palette: ', 30, height - 25);
       for (let i = 0; i < uniqueColorsList.length; i++) {
         exportPg.fill(uniqueColorsList[i]);
         exportPg.stroke('#4A5568');
-        exportPg.strokeWeight(1);
-        exportPg.rect(110 + (i * 20), height - 32, 14, 14);
+        exportPg.strokeWeight(0.5);
+        exportPg.rect(100 + (i * 20), height - 32, 12, 12);
       }
       exportPg.pop();
 
-      // Execute a guaranteed mobile-friendly/desktop save using p5's native Canvas hook directly on the element!
-      saveCanvas(exportPg.canvas, 'drifting_artwork', 'png');
+      // Native save call
+      save(exportPg, 'drifting_artwork.png');
       exportPg.remove();
     });
   }
